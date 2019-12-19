@@ -10,6 +10,7 @@ import (
   "time"
   "fmt"
   "sync"
+  "math"
 )
 
 
@@ -30,7 +31,7 @@ func RandStringBytes(n int) string {
 type record struct {
     threadCount int
     dataSize int
-    time int64 
+    time float64 
 }
 
 type chartData struct{
@@ -64,11 +65,11 @@ func main() {
 
   for i := 1; i < 11; i++ {
     var result record
-    oppSize := (10^i)
+    oppSize := int(math.Pow(5, float64(i)))
     var thrdarr []float64
     var timearr []float64
     filewrite := fmt.Sprint("output",oppSize,".png")
-    for y := 0; y < 40; y++ {
+    for y := 0; y < 20; y++ {
       result = Hashing(optIFile, y+1, oppSize)
       thrdarr = append(thrdarr, float64(result.threadCount))
       timearr = append(timearr, float64(result.time))
@@ -114,7 +115,7 @@ func Hashing(inputData string, threadCount int, oppSize int) (record) {
     close(ch)
     wg.Wait()
     elapsed := time.Since(start)
-    end := record{threadCount, oppSize, elapsed.Microseconds()}
+    end := record{threadCount, oppSize, elapsed.Seconds()}
 
     return end
 }
