@@ -2,6 +2,8 @@ package main
 
 import (
   "github.com/jessevdk/go-flags"
+  "github.com/wcharczuk/go-chart"
+  //"bytes"
   "os"
   "crypto/sha256"
   "math/rand"
@@ -25,6 +27,18 @@ func RandStringBytes(n int) string {
     return string(b)
 }
 
+type record struct {
+    threadCount int
+    dataSize int
+    time int64 
+}
+
+type chartData struct{
+    threads []int
+    time []int64
+    dataSize int
+}
+
 func main() {
   opts := &Options{}
   parser := flags.NewParser(opts, flags.Default)
@@ -35,7 +49,7 @@ func main() {
     os.Exit(1)
   }
 
-  optTCount := opts.ThreadCount
+  //optTCount := opts.ThreadCount
   optOFile := opts.Output
   optIFile := opts.Input
 
@@ -47,15 +61,38 @@ func main() {
     optIFile = RandStringBytes(1000)
   }
 
-  result, err := Hashing(optIFile, optTCount, 1000)
-  fmt.Print(result)
+
+  for i := 1; i < 11; i++ {
+    var result record
+    oppSize := (10000*(10^i))
+    var thrdarr []float64
+    var timearr []float64
+    filewrite := fmt.Sprint("output",oppSize,".png")
+    for y := 0; y < 40; y++ {
+      result = Hashing(optIFile, y+1, oppSize)
+      thrdarr = append(thrdarr, float64(result.threadCount))
+      timearr = append(timearr, float64(result.time))
+    }
+    graph := chart.Chart{
+        Series: []chart.Series{
+          chart.ContinuousSeries{
+            XValues: thrdarr,
+            YValues: timearr,
+          },
+        },
+    }
+    f,_ := os.Create(filewrite)
+    defer f.Close()
+    graph.Render(chart.PNG, f)
+  } 
 }
 
 
-func Hashing(inputData string, threadCount int, oppSize int) (string, error) {
+func Hashing(inputData string, threadCount int, oppSize int) (record) {
     ch := make(chan bool)
     var wg sync.WaitGroup
 
+    start := time.Now();
     for i := 0; i < threadCount; i++ {
       wg.Add(1)
       go func(input string, ch chan bool) {
@@ -73,9 +110,11 @@ func Hashing(inputData string, threadCount int, oppSize int) (string, error) {
     }
     for i := 0; i < oppSize; i++ {
       ch <- false
-}
+    }
     close(ch)
     wg.Wait()
+    elapsed := time.Since(start)
+    end := record{threadCount, oppSize, elapsed.Microseconds()}
 
-    return "success", nil
+    return end
 }
