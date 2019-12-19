@@ -64,7 +64,7 @@ func main() {
 
   for i := 1; i < 11; i++ {
     var result record
-    oppSize := (10000*(10^i))
+    oppSize := (10^i)
     var thrdarr []float64
     var timearr []float64
     filewrite := fmt.Sprint("output",oppSize,".png")
